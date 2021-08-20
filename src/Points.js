@@ -1,5 +1,5 @@
 import React from 'react';
-import { Placemark } from 'react-yandex-maps';
+import { Marker, Popup } from 'react-leaflet';
 import pointInPolygon from 'point-in-polygon';
 
 const getRandomInt = (min, max) => {
@@ -20,47 +20,37 @@ const generatePoint = (coordinates) => {
     const lat = minY + (Math.random() * (maxY - minY));
     const lng = minX + (Math.random() * (maxX - minX));
 
-    if (pointInPolygon([lng, lat], coordinates)) return [lng, lat];
-
-    return generatePoint(coordinates);
+    if (pointInPolygon([lng, lat], coordinates)) return [lat, lng];
+    else return generatePoint(coordinates);
 };
 
 const Points = (props) => {
-    const { ymaps, geometry } = props;
-
-    if (!ymaps || !geometry?.coordinates.length > 0) return null;
-
-    const getPointDistrict = (point) => {
-        ymaps.geocode(point.coordinates, {
-            kind: 'district',
-            results: 1
-        }).then(function (res) {
-            console.log(res);
-        });
-    };
-
     let points = [];
 
     for (let i = 0; i < 100; i++) {
-        const polyIndex = getRandomInt(0, geometry.coordinates.length - 1);
+        const featureIndex = getRandomInt(0, props.features.length - 1);
+        const district = props.features[featureIndex];
 
-        const coordinates = generatePoint(geometry.coordinates[polyIndex]);
-        const district = getPointDistrict(coordinates);
+        let polygonCoordinates = district.geometry.coordinates[0];
 
-        points.push({ coordinates, district });
+        if (district.geometry.type === 'MultiPolygon') {
+            const coordinatesIndex = getRandomInt(0, district.geometry.coordinates.length - 1);
+
+            polygonCoordinates = district.geometry.coordinates[coordinatesIndex][0];
+        }
+
+        const title = district.properties['NAME'];
+        const coordinates = generatePoint(polygonCoordinates);
+
+        points.push({ title, coordinates, district });
     }
 
     console.log(points);
 
     return points.map((point, index) =>
-        <Placemark
-            key={index}
-            geometry={point.coordinates}
-            options={{
-                preset: 'islands#circleDotIcon',
-                iconColor: 'red'
-            }}
-        />
+        <Marker key={index} position={point.coordinates}>
+            <Popup>{`${point.title} #${index}`}</Popup>
+        </Marker>
     );
 }
 

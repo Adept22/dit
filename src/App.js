@@ -1,42 +1,40 @@
 import React, { useState } from 'react';
-import { YMaps, Map, Polygon } from 'react-yandex-maps';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import ao from './ao.json';
 
 import Points from './Points';
 
+import 'leaflet/dist/leaflet.css';
 import './App.css';
 
+// Фикс иконки маркера
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+// Конец фикса
+
 const App = () => {
-    const [ymaps, setYmaps] = useState(null);
-    const [moscowGeometry, setMoscowGeometry] = useState(null);
+    const MOSCOW = [55.75, 37.57];
 
-    const onLoad = (_ymaps) => {
-        _ymaps.borders.load('RU', {
-            lang: 'ru',
-            quality: 3
-        }).then(borders => {
-            const moscowFeature = borders.features.find(feature => feature?.properties.iso3166 === 'RU-MOW');
-
-            console.log(moscowFeature);
-
-            setMoscowGeometry(moscowFeature.geometry);
-            setYmaps(_ymaps);
-        });
-    };
+    console.log(ao);
 
     return (
-        <div className="App">
-            <YMaps>
-                <Map 
-                    width={1000}
-                    height={500}
-                    defaultState={{ center: [55.75, 37.57], zoom: 9 }}
-                    onLoad={onLoad}
-                    modules={['borders', 'geocode']}
-                >
-                    <Points ymaps={ymaps} geometry={moscowGeometry} />
-                    {moscowGeometry ? <Polygon geometry={moscowGeometry.coordinates} /> : null}
-                </Map>
-            </YMaps>
+        <div className="App" style={{width: '100%', height: '100%'}}>
+            <MapContainer center={MOSCOW} zoom={9}>
+                <TileLayer
+                    attribution='&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <GeoJSON data={ao} />
+                <Points features={ao.features} />
+            </MapContainer>
         </div>
     );
 };

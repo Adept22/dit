@@ -1,25 +1,44 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import { YMaps, Map, Polygon } from 'react-yandex-maps';
+
+import Points from './Points';
+
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+    const [ymaps, setYmaps] = useState(null);
+    const [moscowGeometry, setMoscowGeometry] = useState(null);
+
+    const onLoad = (_ymaps) => {
+        _ymaps.borders.load('RU', {
+            lang: 'ru',
+            quality: 3
+        }).then(borders => {
+            const moscowFeature = borders.features.find(feature => feature?.properties.iso3166 === 'RU-MOW');
+
+            console.log(moscowFeature);
+
+            setMoscowGeometry(moscowFeature.geometry);
+            setYmaps(_ymaps);
+        });
+    };
+
+    return (
+        <div className="App">
+            <YMaps>
+                <Map 
+                    width={1000}
+                    height={500}
+                    defaultState={{ center: [55.75, 37.57], zoom: 9 }}
+                    onLoad={onLoad}
+                    modules={['borders', 'geocode']}
+                >
+                    <Points ymaps={ymaps} geometry={moscowGeometry} />
+                    {moscowGeometry ? <Polygon geometry={moscowGeometry.coordinates} /> : null}
+                </Map>
+            </YMaps>
+        </div>
+    );
+};
 
 export default App;

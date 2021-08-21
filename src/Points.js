@@ -3,16 +3,17 @@ import PropTypes from "prop-types";
 import { Marker, Popup } from 'react-leaflet';
 
 const Points = (props) => {
-    let points = props.points;
+    /** @var object _points - Копия переменной с точками */
+    let _points = props.points;
 
     if (props.selected.length > 0) {
-        points = {};
+        _points = {};
 
-        props.selected.map(selectedOkato => points[selectedOkato] = props.points[selectedOkato]);
+        props.selected.map(selectedOkato => _points[selectedOkato] = props.points[selectedOkato]);
     }
 
-    return Object.getOwnPropertyNames(points).map(okato =>
-        points[okato].map((point, index) => 
+    return Object.getOwnPropertyNames(_points).map(okato =>
+        _points[okato].map((point, index) => 
             <Marker key={`${okato}-${index}`} position={point.coordinates}>
                 <Popup>{`${point.title} #${okato}-${index}`}</Popup>
             </Marker>
